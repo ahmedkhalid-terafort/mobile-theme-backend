@@ -1,0 +1,28 @@
+# Virtual environments
+.venv/
+.venv-py312/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Environment secrets
+.env
+
+# Testing and tooling
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
