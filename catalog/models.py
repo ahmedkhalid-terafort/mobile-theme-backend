@@ -179,3 +179,128 @@ class Keyboard(CatalogItem):
         return self.name
 
 
+
+class Wallpaper(CatalogItem):
+    EXPECTED_CATEGORY_TYPE = Category.Type.WALLPAPER
+
+    preview_url = models.URLField(blank=True)
+    image_url = models.URLField()
+
+    class Meta(CatalogItem.Meta):
+        verbose_name = "wallpaper"
+        verbose_name_plural = "wallpapers"
+
+    def __str__(self):
+        return self.name
+
+
+class Theme(CatalogItem):
+    EXPECTED_CATEGORY_TYPE = Category.Type.THEME
+
+    preview_url = models.URLField(blank=True)
+
+    keyboard = models.ForeignKey(
+        Keyboard,
+        on_delete=models.SET_NULL,
+        related_name="themes",
+        null=True,
+        blank=True,
+    )
+
+    wallpaper = models.ForeignKey(
+        Wallpaper,
+        on_delete=models.SET_NULL,
+        related_name="themes",
+        null=True,
+        blank=True,
+    )
+
+    class Meta(CatalogItem.Meta):
+        verbose_name = "theme"
+        verbose_name_plural = "themes"
+
+    def __str__(self):
+        return self.name
+
+
+
+class ThemeIcon(UUIDModel):
+    theme = models.ForeignKey(
+        Theme,
+        on_delete=models.CASCADE,
+        related_name="icons",
+    )
+    name = models.CharField(max_length=256)
+    preview_url = models.URLField(blank=True)
+    icon_image = models.URLField()
+    alias_id = models.CharField(max_length=255)
+    priority = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "theme icon"
+        verbose_name_plural = "theme icons"
+        ordering = ("priority", "-created_at")
+
+    def __str__(self):
+        return f"{self.theme.name} / {self.name}"
+
+
+
+class DiyAsset(UUIDModel):
+    """Common fields for independent DIY catalog assets."""
+
+    name = models.CharField(max_length=256)
+    priority = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ("priority", "-created_at")
+
+    def __str__(self):
+        return self.name
+
+
+
+class DiyImage(DiyAsset):
+    image_url = models.URLField()
+    description = models.TextField(blank=True)
+    transparency = models.FloatField(
+        default=0.85,
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(1.0),
+        ],
+    )
+
+
+
+class DiyKey(DiyAsset):
+    image_url = models.URLField()
+    description = models.TextField(blank=True)
+    transparency = models.FloatField(
+        default=0.9,
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(1.0),
+        ],
+    )
+    special_key_bg = models.URLField()
+
+
+
+class DiyFont(DiyAsset):
+    font_url = models.URLField()
+
+
+
+class DiyEffect(DiyAsset):
+    gif_url = models.URLField()
+    preview_url = models.URLField(blank=True)
+
+
+
+class DiySound(DiyAsset):
+    sound_url = models.URLField()
+    preview_url = models.URLField(blank=True)
