@@ -21,6 +21,10 @@ from .models import (
 class ImagePreviewMixin:
     @admin.display(description="Preview")
     def image_preview(self, obj):
+        # print(
+        #     f"\n[image_preview] Called for "
+        #     f'{type(obj).__name__}: {obj}'
+        # )
         possible_fields = (
             "thumbnail",
             "preview_url",
@@ -32,6 +36,11 @@ class ImagePreviewMixin:
 
         for field_name in possible_fields:
             url = getattr(obj, field_name, "")
+            # print(
+            #     f"[image_preview] Checking {field_name}: "
+            #     f"{url!r}"
+            # )
+
             if url:
                 return format_html(
                     '<img src="{}" '
@@ -39,6 +48,7 @@ class ImagePreviewMixin:
                     'object-fit: cover; border-radius: 4px;">',
                     url,
                 )
+            
         return "-"
 
 
@@ -101,6 +111,9 @@ class CatalogItemAdmin(ImagePreviewMixin, admin.ModelAdmin):
         request,
         **kwargs,
     ):
+        # print(self.expected_category_type)
+        # print(db_field)
+        # print(request)
         if self.expected_category_type:
             if db_field.name == "category":
                 kwargs["queryset"] = Category.objects.filter(
@@ -111,6 +124,8 @@ class CatalogItemAdmin(ImagePreviewMixin, admin.ModelAdmin):
                 kwargs["queryset"] = SubCategory.objects.filter(
                     category__type=self.expected_category_type,
                 )
+            # else:
+            #     print("[ACTION] No custom filtering for this field")
 
         return super().formfield_for_foreignkey(
             db_field,
@@ -195,3 +210,8 @@ class DiyAssetAdmin(ImagePreviewMixin, admin.ModelAdmin):
 admin.site.site_header = "Mobile Theme Administration"
 admin.site.site_title = "Mobile Theme Admin"
 admin.site.index_title = "Catalog Management"
+
+
+
+
+
