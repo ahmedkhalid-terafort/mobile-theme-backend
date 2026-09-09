@@ -1,6 +1,11 @@
 import uuid
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator,
+)
 
 # Create your models here.
 
@@ -126,4 +131,51 @@ class CoolFont(CatalogItem):
 
     def __str__(self):
         return self.name
+
+
+
+class Keyboard(CatalogItem):
+    EXPECTED_CATEGORY_TYPE = Category.Type.KEYBOARD
+
+    preview_url = models.URLField(blank=True)
+
+    text_color = models.CharField(
+        max_length=9,
+        default="#FFFFFFFF",
+        validators=[
+            RegexValidator(
+                regex=r"^#[0-9A-Fa-f]{8}$",
+                message=(
+                    "Enter a color using # followed by "
+                    "eight hexadecimal characters."
+                ),
+            ),
+        ],
+    )
+    key_alpha = models.FloatField(
+        default=0.85,
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(1.0),
+        ],
+    )
+
+    keyboard_bg = models.URLField()
+    normal_key_bg = models.URLField()
+    specialty_keys_bg = models.URLField()
+
+    backspace_key_bg = models.URLField(blank=True)
+    uppercase_letter_bg = models.URLField(blank=True)
+    number_button_bg = models.URLField(blank=True)
+    emoji_button_bg = models.URLField(blank=True)
+    comma_button_bg = models.URLField(blank=True)
+    enter_button_bg = models.URLField(blank=True)
+
+    class Meta(CatalogItem.Meta):
+        verbose_name = "keyboard"
+        verbose_name_plural = "keyboards"
+
+    def __str__(self):
+        return self.name
+
 
