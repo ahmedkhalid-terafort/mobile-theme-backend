@@ -1,0 +1,119 @@
+from rest_framework import serializers
+
+from .models import Category, CoolFont, SubCategory, Keyboard, DiyImage
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    has_subcategories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = (
+            "id",
+            "name",
+            "type",
+            "thumbnail",
+            "priority",
+            "has_subcategories",
+        )
+
+    def  get_has_subcategories(self, obj):
+        return obj.subcategories.exists()
+
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubCategory
+        fields = (
+            "id",
+            "name",
+            "thumbnail",
+            "priority",
+        )
+
+
+
+class CoolFontSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
+
+    subcategory_name = serializers.CharField(
+        source = "subcategory.name",
+        read_only=True,
+        allow_null=True
+    )
+
+    class Meta:
+        model = CoolFont
+        fields = (
+            "id",
+            "name",
+            "category_id",
+            "category_name",
+            "subcategory_id",
+            "subcategory_name",
+            "content",
+            "thumbnail",
+            "premium",
+            "priority",
+            "created_at",
+        )
+
+
+
+
+class KeyboardSerializer(serializers.ModelSerializer):
+
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True
+    )
+
+    subcategory_name = serializers.CharField(
+        source="subcategory.name",
+        read_only=True,
+        allow_null=True
+    )
+
+    class Meta:
+        model = Keyboard
+        fields = (
+            "id",
+            "name",
+            "category_id",
+            "category_name",
+            "subcategory_id",
+            "subcategory_name",
+            "premium",
+            "preview_url",
+            "text_color",
+            "key_alpha",
+            "keyboard_bg",
+            "normal_key_bg",
+            "specialty_keys_bg",
+            "backspace_key_bg",
+            "uppercase_letter_bg",
+            "number_button_bg",
+            "emoji_button_bg",
+            "comma_button_bg",
+            "enter_button_bg",
+            "priority",
+            "created_at"
+        )
+
+
+class DiyImageSerializer(serializers.ModelSerializer):
+    model = DiyImage
+    fields = (
+        "id",
+        "name",
+        "image_url",
+        "description",
+        "transparency",
+        "priority",
+        "created_at"
+    )
+
