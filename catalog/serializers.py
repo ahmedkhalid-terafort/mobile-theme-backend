@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, CoolFont, SubCategory, Keyboard, DiyImage
+from .models import Category, CoolFont, SubCategory, Keyboard, DiyImage, DiyFont, DiyEffect, DiyKey, DiySound
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -106,14 +106,70 @@ class KeyboardSerializer(serializers.ModelSerializer):
 
 
 class DiyImageSerializer(serializers.ModelSerializer):
-    model = DiyImage
-    fields = (
-        "id",
-        "name",
-        "image_url",
-        "description",
-        "transparency",
-        "priority",
-        "created_at"
-    )
+    class Meta:
+        model = DiyImage
+        fields = (
+                "id",
+                "name",
+                "image_url",
+                "description",
+                "transparency",
+                "priority",
+                "created_at"
+            )
+
+
+
+class DiyFontSerilaizer(serializers.ModelSerializer):
+    class Meta:
+        model = DiyFont
+        fields = (
+            "id",
+            "name",
+            "font_url",
+            "priority",
+            "created_at"
+        )
+
+
+class DiyEffectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiyEffect
+        fields = (
+            "id",
+            "name",
+            "gif_url",
+            "preview_url",
+            "priority",
+            "created_at"
+        )
+
+
+class DiyKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiyKey
+        fields = (
+            "id",
+            "name",
+            "image_url",
+            "description",
+            "transparency",
+            "special_key_bg",
+            "priority",
+            "created_at"
+        )
+
+
+class DiySoundSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DiySound
+        fields = (
+            "id",
+            "name",
+            "sound_url",
+            "preview_url",
+            "priority",
+            "created_at"
+        )
+
 

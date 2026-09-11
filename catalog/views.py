@@ -1,14 +1,21 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Category, CoolFont, Keyboard, Wallpaper, Theme
+from .models import Category, CoolFont, Keyboard, Wallpaper, Theme, DiyImage, DiyFont, DiyEffect, DiyKey, DiySound
 from .permissions import HasMobileThemeAPIKey
 from .serializers import (
     CategorySerializer,
     CoolFontSerializer,
     SubCategorySerializer,
-    KeyboardSerializer
+    KeyboardSerializer,
+    DiyImageSerializer,
+    DiyFontSerilaizer,
+    DiyEffectSerializer,
+    DiyKeySerializer,
+    DiySoundSerializer
 )
+
+from .utils import is_valid_uuid, get_pagination_params
 
 
 class ArtworkCategoryListView(APIView):
@@ -948,6 +955,23 @@ class ThemeListView(APIView):
                     "preview_url": theme.wallpaper.preview_url,
                     "image_url": theme.wallpaper.image_url,
                 }
+
+
+
+            for icon in theme.icons.all():
+                        icon_data = {
+                            "id": str(icon.id),
+                            "name": icon.name,
+                            "preview_url": icon.preview_url,
+                            "icon_image": icon.icon_image,
+                            "alias_id": icon.alias_id,
+                            "priority": icon.priority,
+                            "created_at": icon.created_at,
+                        }
+                        icon_items.append(icon_data)
+
+
+            
             item = {
                 "id": theme.id,
                 "name": theme.name,
@@ -1014,23 +1038,45 @@ class ThemeDetailView(APIView):
             )
         
 
-        keyboard_data = {
-                    "id": str(theme.keyboard.id),
-                    "name": theme.keyboard.name,
-                    "preview_url": theme.keyboard.preview_url,
-                    "text_color": theme.keyboard.text_color,
-                    "key_alpha": theme.keyboard.key_alpha,
-                    "keyboard_bg": theme.keyboard.keyboard_bg,
-                    "normal_key_bg": theme.keyboard.normal_key_bg,
-                    "specialty_keys_bg": theme.keyboard.specialty_keys_bg,
-                }
-        wallpaper_data = {
-                    "id": str(theme.wallpaper.id),
-                    "name": theme.wallpaper.name,
-                    "preview_url": theme.wallpaper.preview_url,
-                    "image_url": theme.wallpaper.image_url,
-                }
+        keyboard_data = None
+        wallpaper_data = None
         icon_items = []
+
+
+        if theme.keyboard:
+            keyboard_data = {
+                        "id": str(theme.keyboard.id),
+                        "name": theme.keyboard.name,
+                        "preview_url": theme.keyboard.preview_url,
+                        "text_color": theme.keyboard.text_color,
+                        "key_alpha": theme.keyboard.key_alpha,
+                        "keyboard_bg": theme.keyboard.keyboard_bg,
+                        "normal_key_bg": theme.keyboard.normal_key_bg,
+                        "specialty_keys_bg": theme.keyboard.specialty_keys_bg,
+                    }
+
+        if theme.wallpaper:
+            wallpaper_data = {
+                        "id": str(theme.wallpaper.id),
+                        "name": theme.wallpaper.name,
+                        "preview_url": theme.wallpaper.preview_url,
+                        "image_url": theme.wallpaper.image_url,
+                    }
+
+
+        for icon in theme.icons.all():
+            icon_data = {
+                "id": str(icon.id),
+                "name": icon.name,
+                "preview_url": icon.preview_url,
+                "icon_image": icon.icon_image,
+                "alias_id": icon.alias_id,
+                "priority": icon.priority,
+                "created_at": icon.created_at,
+            }
+            icon_items.append(icon_data)
+            
+        
         data = {
                 "id": theme.id,
                 "name": theme.name,
@@ -1068,6 +1114,395 @@ class ThemeDetailView(APIView):
         )
 
         
+class DiyImageListView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+    def get(self, request):
+        images = DiyImage.objects.all()
+
+        try:
+            skip = int(request.query_params.get("skip", 0))
+            limit = int(request.query_params.get("limit", 20))
+        except ValueError:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip and limit must be integers"
+                },
+                status=422
+            )
+
+        if skip < 0 or limit < 1 or limit > 100:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip must be positive and limit must be between 1 and 100"
+                },
+                status=422
+            )
+
+        total = images.count()
+
+        images = images[skip:skip+limit]
+
+        serializer = DiyImageSerializer(images, many=True)
+
+        return Response(
+            {
+                "status": 200,
+                "data": {
+                    "items": serializer.data,
+                    "total": total,
+                    "skip": skip,
+                    "limit": limit,
+                },
+                "message": "DIY Images data fetched successfully"
+            },
+            status=200
+        )
 
 
-        
+class DiyImageDetailView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+    def get(self, request, image_id):
+        image = DiyImage.objects.filter(id=image_id).first()
+
+        if image is None:
+            return Response(
+                {
+                    "status": 404,
+                    "data": None,
+                    "message": "No image found against this ID"
+                },
+                status=404
+            )
+
+        serializer = DiyImageSerializer(image)
+
+        return Response(
+            {
+                "status": 200,
+                "data": serializer.data,
+                "message": "Image against this id fetched successfully"
+            },
+            status=200
+        )
+
+
+
+class DiyFontListView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request):
+        fonts = DiyFont.objects.all()
+
+        try:
+            skip = int(request.query_params.get("skip", 0))
+            limit = int(request.query_params.get("limit", 20))
+        except ValueError:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip and limit must be integers"
+                },
+                status=422
+            )
+
+        if skip < 0 or limit < 1 or limit > 100:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip must be positive and limit must be at max 100"
+                },
+                status=422
+            )
+
+        total = fonts.count()
+        fonts = fonts[skip:skip+limit]
+
+        serializer = DiyFontSerilaizer(fonts, many=True)
+
+        return Response(
+            {
+                "status": 200,
+                "data": {
+                    "items": serializer.data,
+                    "total": total,
+                    "skip": skip,
+                    "limit": limit
+                },
+                "message": "fonts data fetched successfully"
+            },
+            status=200
+        )
+
+
+class DiyFontDetailView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request, font_id):
+        font = DiyFont.objects.filter(id=font_id).first()
+
+        if font is None:
+            return Response(
+                {
+                    "status": 404,
+                    "data": None,
+                    "message": "No data found against this font id"
+                },
+                status=404
+            )   
+
+        serializer = DiyFontSerilaizer(font)
+
+        return Response(
+            {
+                "status": 200,
+                "data": serializer.data,
+                "message": "Font detail fetched successfully"
+            },
+            status=200
+        )    
+
+
+
+class DiyEffectListView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request):
+        effects = DiyEffect.objects.all()
+
+        try:
+            skip = int(request.query_params.get("skip", 0))
+            limit = int(request.query_params.get("limit", 20))
+        except ValueError:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip and limit must be integers"
+                },
+                status=422
+            )
+
+        if skip < 0 or limit < 1 or limit > 100:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip must be positive and limit must be positive and below 100"
+                },
+                status=422
+            )
+
+        total = effects.count()
+        effects = effects[skip:skip+limit]
+
+        serializer = DiyEffectSerializer(effects, many=True)
+
+        return Response(
+            {
+                "status": 200,
+                "data": {
+                    "items": serializer.data,
+                    "total": total,
+                    "skip": skip,
+                    "limit": limit
+                },
+                "message": "effects data fetched successfully"
+            },
+            status=200
+        )
+
+
+
+class DiyEffectDetailView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request, effect_id):
+        effect = DiyEffect.objects.filter(id=effect_id).first()
+
+        if effect is None:
+            return Response(
+                {
+                    "status": 404,
+                    "data": None,
+                    "message": "No data exists against this id"
+                },
+                status=404
+            )
+
+        serializer = DiyEffectSerializer(effect)
+
+        return Response(
+            {
+                "status": 200,
+                "data": serializer.data,
+                "message": "Effect fetched successfully"
+            },
+            status=200
+        )
+
+
+class DiyKeyListView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request):
+        keys = DiyKey.objects.all()
+
+        try:
+            skip = int(request.query_params.get("skip", 0))
+            limit = int(request.query_params.get("limit", 20))
+        except ValueError:
+            return Response(
+                {
+                    "status": 422,
+                    "data":  None,
+                    "message": "skip and limit must be integers"
+                },
+                status=422
+            )
+
+        if skip < 0 or limit < 1 or limit > 100:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip must be positive and limit must be between 1 and 100"
+                },
+                status=422
+            )
+
+        total = keys.count()
+        keys = keys[skip:skip+limit]
+
+        serializer = DiyKeySerializer(keys, many=True)
+
+        return Response(
+            {
+                "status": 200,
+                "data": {
+                    "items": serializer.data,
+                    "total": total,
+                    "skip": skip,
+                    "limit": limit
+                },
+                "message": "Diy Keys data fetched successfully"
+            },
+            status=200
+        )
+
+
+
+class DiyKeyDetailView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request, key_id):
+        key = DiyKey.objects.filter(id=key_id).first()
+
+        if key is None:
+            return Response(
+                {
+                    "status": 404,
+                    "data": None,
+                    "message": "No key found against this id"
+                },
+                status=404
+            )
+
+        serializer = DiyKeySerializer(key)
+
+        return Response(
+            {
+                "status": 200,
+                "data": serializer.data,
+                "message": "Key details fetched successfully"
+            },
+            status=200
+        )
+
+
+
+class DiySoundListView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request):
+        sounds = DiySound.objects.all()
+
+        try:
+            skip = int(request.query_params.get("skip", 0))
+            limit = int(request.query_params.get("limit", 20))
+        except ValueError:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip and limit must be valid integers"
+                },
+                status=422
+            )
+
+        if skip < 0 or limit < 1 or limit > 100:
+            return Response(
+                {
+                    "status": 422,
+                    "data": None,
+                    "message": "skip must be greater than 0 and limit must be between 1 and 100"
+                },
+                status=422
+            )
+
+
+        total = sounds.count()
+        sounds = sounds[skip:skip+limit]
+
+        serializer = DiySoundSerializer(sounds, many=True)
+
+        return Response(
+            {
+                "status": 200,
+                "data": {
+                    "items": serializer.data,
+                    "total": total,
+                    "skip": skip,
+                    "limit": limit
+                },
+                "message": "Diy sounds data fetched successfully"
+            },
+            status=200
+        )
+
+
+
+class DiySoundDetailView(APIView):
+    permission_classes = [HasMobileThemeAPIKey]
+
+    def get(self, request, sound_id):
+        sound = DiySound.objects.filter(id=sound_id).first()
+
+        if sound is None:
+            return Response(
+                {
+                    "status": 404,
+                    "data": None,
+                    "message": "No sound found against this id"
+                },
+                status=404
+            )
+
+        serializer = DiySoundSerializer(sound)
+
+        return Response(
+            {
+                "status": 200,
+                "data": serializer.data,
+                "message": "Diy sound data fetched successfully"
+            },
+            status=200
+        )
+
+
+

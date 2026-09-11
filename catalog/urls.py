@@ -3,7 +3,8 @@ from django.urls import path
 from .views import (ArtworkCategoryListView, ArtworkSubCategoryListView, ArtworkListView, ArtworkDetailView,
                     KeyboardCategoryListView, KeyboardSubCategoryListView, KeyboardListView, KeyboardDetailView,
                     WallpaperCategoryListView, WallpaperSubCategoryListView, WallpaperListView, WallpaperDetailView,
-                    ThemeCategoryListView, ThemeSubcategoryListView, ThemeListView, ThemeDetailView)
+                    ThemeCategoryListView, ThemeSubcategoryListView, ThemeListView, ThemeDetailView,
+                    DiyImageListView, DiyImageDetailView, DiyFontListView, DiyFontDetailView, DiyEffectListView, DiyEffectDetailView, DiyKeyListView, DiyKeyDetailView, DiySoundListView, DiySoundDetailView)
 
 
 app_name = "catalog"
@@ -61,7 +62,60 @@ urlpatterns = [
     path(
         "theme/<uuid:theme_id>",
         ThemeDetailView.as_view()
-    )
+    ),
 
+    path(
+        "diy/images",
+        DiyImageListView.as_view()
+    ),
+
+    path(
+        "diy/images/<uuid:image_id>",
+        DiyImageDetailView.as_view(),
+        name="diy-image-detail",
+    ),
+
+    path(
+        "diy/fonts",
+        DiyFontListView.as_view()
+    ),
+    path(
+        "diy/fonts/<uuid:font_id>",
+        DiyFontDetailView.as_view(),
+        name="diy-font-detail"
+    ),
+
+    path(
+        "diy/effects",
+        DiyEffectListView.as_view()
+    ),
+
+    path(
+        "diy/effects/<uuid:effect_id>",
+        DiyEffectDetailView.as_view(),
+        name="diy-effect-detail"
+    ),
+
+    path(
+        "diy/keys",
+        DiyKeyListView.as_view()
+    ),
+
+    path(
+        "diy/keys/<uuid:key_id>",
+        DiyKeyDetailView.as_view(),
+        name="diy-key-detail"
+    ),
+
+    path(
+        "diy/sounds",
+        DiySoundListView.as_view()
+    ),
+
+    path(
+        "diy/sounds/<uuid:sound_id>",
+        DiySoundDetailView.as_view(),
+        name="diy-sound-detail"
+    )
 
 ]
