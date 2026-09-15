@@ -171,5 +171,3 @@ class DiySoundSerializer(serializers.ModelSerializer):
             "priority",
             "created_at"
         )
-
-

@@ -15,7 +15,7 @@ from .serializers import (
     DiySoundSerializer
 )
 
-from .utils import is_valid_uuid, get_pagination_params
+from .utils import get_pagination_params, apply_query_params_filters
 
 
 class ArtworkCategoryListView(APIView):
@@ -26,30 +26,12 @@ class ArtworkCategoryListView(APIView):
             type=Category.Type.COOL_FONT,
         )
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip and limit must be integers.",
-                },
-                status=422,
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
+        if error_response is not None:
+            return error_response
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip must be 0 or greater, and limit must be 1 or greater.",
-                },
-                status=422
-            )
-
-        total = categories.count()
+        # total = categories.count()
+        total = len(categories)
 
         categories = categories[skip:skip + limit]
 
@@ -93,31 +75,14 @@ class ArtworkSubCategoryListView(APIView):
                 status=404
             )
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip and limit must be integers.",
-                },
-                status=422
-            ) 
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip must be 0 or greater, and limit must be between 1 and 100.",
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
         subcategories = category.subcategories.all()
-        total = subcategories.count()
+        # total = subcategories.count()
+        total = len(subcategories)
         subcategories = subcategories[skip:skip + limit]
 
         serializer = SubCategorySerializer(
@@ -142,7 +107,7 @@ class ArtworkSubCategoryListView(APIView):
 
 
 class ArtworkListView(APIView):
-    permission_classes = [HasMobileThemeAPIKey]
+    permission_classes = (HasMobileThemeAPIKey,)
 
     def get(self, request):
         artworks = CoolFont.objects.select_related(
@@ -150,60 +115,19 @@ class ArtworkListView(APIView):
             "subcategory"
         ).all()
 
-        category_id = request.query_params.get("category_id")
-        subcategory_id = request.query_params.get("subcategory_id")
-        premium_only = request.query_params.get(
-            "premium_only",
-            "false"
-        ).lower()
+        artworks, error_response = apply_query_params_filters(request=request, query_set=artworks)
 
-        if subcategory_id:
-            artworks = artworks.filter(
-                subcategory_id=subcategory_id,
-            )
-        elif category_id:
-            artworks = artworks.filter(
-                category_id=category_id,
-                subcategory__isnull=True,
-            )
+        if error_response is not None:
+            return error_response
 
-        if premium_only not in ("true", "false"):
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "premium_only must be true or false.",
-                },
-                status=422,
-            )
 
-        if premium_only == "true":
-            artworks = artworks.filter(premium=True)
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip and limit must be integers.",
-                },
-                status=422,
-            )
+        if error_response is not None:
+            return error_response
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip must be 0 or greater, and limit must be between 1 and 100.",
-                },
-                status=422,
-            )
-
-        total = artworks.count()
+        # total = artworks.count()
+        total = len(artworks)
         artworks = artworks[skip:skip + limit]
 
         serializer = CoolFontSerializer(
@@ -265,30 +189,13 @@ class KeyboardCategoryListView(APIView):
     def get(self, request):
         categories = Category.objects.filter(type=Category.Type.KEYBOARD)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must not be negative and max limit is 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = categories.count()
+        # total = categories.count()
+        total = len(categories)
 
         categories = categories[skip:skip+limit]
 
@@ -328,31 +235,14 @@ class KeyboardSubCategoryListView(APIView):
             )
 
         subcategories = category.subcategories.all()
-        total = subcategories.count()
+        # total = subcategories.count()
+        total = len(subcategories)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit =  int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip must not be less than 0 and max limit is 100"
-                },
-                status=422
-            )
-
+        if error_response is not None:
+            return error_response
+        
         subcategories = subcategories[skip:skip + limit]
 
         serializer = SubCategorySerializer(
@@ -384,42 +274,19 @@ class KeyboardListView(APIView):
             "subcategory"
         )
 
-        category_id = request.query_params.get("category_id")
-        subcategory_id = request.query_params.get("subcategory_id")
-        premium_only = request.query_params.get("premium_only", "false").lower()
+        keyboards, error_response = apply_query_params_filters(request=request, query_set=keyboards)
 
-        if subcategory_id:
-            keyboards = keyboards.filter(subcategory_id=subcategory_id)
-        elif category_id:
-            keyboards = keyboards.filter(category_id=category_id, subcategory__isnull=True)
+        if error_response is not None:
+            return error_response
 
-        if premium_only == "true":
-            keyboards = keyboards.filter(premium=True)
+        
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "Skip amd limit must be integers."
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        if skip < 0 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must not be negative and max limit is 100"
-                },
-                status=422
-            )
-
-        total = keyboards.count()
+        # total = keyboards.count()
+        total = len(keyboards)
         keyboards = keyboards[skip:skip+limit]
 
         serializer = KeyboardSerializer(
@@ -482,30 +349,13 @@ class WallpaperCategoryListView(APIView):
             type=Category.Type.WALLPAPER
         )
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = categories.count()
+        # total = categories.count()
+        total = len(categories)
 
         categories = categories[skip:skip+limit]
 
@@ -557,31 +407,14 @@ class WallpaperSubCategoryListView(APIView):
                 status=404
             )
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must not be zero and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
         subcategories = category.subcategories.all()
-        total = subcategories.count()
+        # total = subcategories.count()
+        total = len(subcategories)
         subcategories = subcategories[skip:skip+limit]
         
 
@@ -622,42 +455,19 @@ class WallpaperListView(APIView):
             "subcategory"
         )
 
-        category_id = request.query_params.get("category_id")
-        subcategory_id = request.query_params.get("subcategory_id")
-        premium_only = request.query_params.get("premium_only", "false").lower()
+        wallpapers, error_response = apply_query_params_filters(request=request, query_set=wallpapers)
 
-        if subcategory_id:
-            wallpapers = wallpapers.filter(subcategory_id=subcategory_id)
-        elif category_id:
-            wallpapers = wallpapers.filter(category_id=category_id, subcategory__isnull=True,)
+        if error_response is not None:
+            return error_response
 
-        if premium_only == "true":
-            wallpapers = wallpapers.filter(premium=True)
+        
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip can not be less than 0 and limit must be between 1 and 100"
-                },
-                status=422
-            )
-
-        total = wallpapers.count()
+        # total = wallpapers.count()
+        total = len(wallpapers)
         wallpapers = wallpapers[skip:skip+limit]
 
         items = []
@@ -752,30 +562,13 @@ class ThemeCategoryListView(APIView):
     def get(self, request):
         categories = Category.objects.filter(type=Category.Type.THEME)
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must not be negative and limit  must be between 1 and 100"
-                },
-                status=422
-            )
-
-        total = categories.count()
+        if error_response is not None:
+            return error_response
+        
+        # total = categories.count()
+        total = len(categories)
 
         categories = categories[skip:skip+limit]
 
@@ -827,31 +620,14 @@ class ThemeSubcategoryListView(APIView):
                 status=404
             )
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 100))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=100)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be greater than 0 and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
         subcategories = category.subcategories.all()
-        total = subcategories.count()
+        # total = subcategories.count()
+        total = len(subcategories)
         subcategories = subcategories[skip:skip+limit]
 
         items = []
@@ -892,42 +668,20 @@ class ThemeListView(APIView):
             "wallpaper"
         ).prefetch_related("icons")
 
-        category_id = request.query_params.get("category_id")
-        subcategory_id = request.query_params.get("subcategory_id")
-        premium_only = request.query_params.get("premium_only", "false").lower()
 
-        if subcategory_id:
-            themes = themes.filter(subcategory_id=subcategory_id)
-        elif category_id:
-            themes = themes.filter(category_id=category_id, subcategory__isnull=True)
+        themes, error_response = apply_query_params_filters(request=request, query_set=themes)
 
-        if premium_only == "true":
-            themes = themes.filter(premium=True)
+        if error_response is not None:
+            return error_response
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = themes.count()
+        # total = themes.count()
+        total = len(themes)
         themes = themes[skip:skip+limit]
 
         items = []
@@ -1119,30 +873,13 @@ class DiyImageListView(APIView):
     def get(self, request):
         images = DiyImage.objects.all()
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = images.count()
+        # total = images.count()
+        total = len(images)
 
         images = images[skip:skip+limit]
 
@@ -1197,30 +934,13 @@ class DiyFontListView(APIView):
     def get(self, request):
         fonts = DiyFont.objects.all()
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be at max 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = fonts.count()
+        # total = fonts.count()
+        total = len(fonts)
         fonts = fonts[skip:skip+limit]
 
         serializer = DiyFontSerilaizer(fonts, many=True)
@@ -1275,30 +995,13 @@ class DiyEffectListView(APIView):
     def get(self, request):
         effects = DiyEffect.objects.all()
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be positive and below 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = effects.count()
+        # total = effects.count()
+        total = len(effects)
         effects = effects[skip:skip+limit]
 
         serializer = DiyEffectSerializer(effects, many=True)
@@ -1353,30 +1056,13 @@ class DiyKeyListView(APIView):
     def get(self, request):
         keys = DiyKey.objects.all()
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data":  None,
-                    "message": "skip and limit must be integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be positive and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is not None:
+            return error_response
 
-        total = keys.count()
+        # total = keys.count()
+        total = len(keys)
         keys = keys[skip:skip+limit]
 
         serializer = DiyKeySerializer(keys, many=True)
@@ -1432,31 +1118,14 @@ class DiySoundListView(APIView):
     def get(self, request):
         sounds = DiySound.objects.all()
 
-        try:
-            skip = int(request.query_params.get("skip", 0))
-            limit = int(request.query_params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip and limit must be valid integers"
-                },
-                status=422
-            )
+        skip, limit, error_response = get_pagination_params(request=request, default_limit=20)
 
-        if skip < 0 or limit < 1 or limit > 100:
-            return Response(
-                {
-                    "status": 422,
-                    "data": None,
-                    "message": "skip must be greater than 0 and limit must be between 1 and 100"
-                },
-                status=422
-            )
+        if error_response is  not None:
+            return error_response
 
 
-        total = sounds.count()
+        # total = sounds.count()
+        total = len(sounds)
         sounds = sounds[skip:skip+limit]
 
         serializer = DiySoundSerializer(sounds, many=True)

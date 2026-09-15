@@ -45,6 +45,7 @@ ALLOWED_HOSTS = env.list(
 # Application definition
 
 INSTALLED_APPS = [
+    'silk',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'silk.middleware.SilkyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -101,6 +103,13 @@ DATABASES = {
 
 MOBILE_THEME_API_KEY = env("MOBILE_THEME_API_KEY")
 
+SUPABASE_URL = env("SUPABASE_URL")
+SUPABASE_SECRET_KEY = env("SUPABASE_SECRET_KEY")
+SUPABASE_BUCKET = env(
+    "SUPABASE_BUCKET",
+    default="mobile-theme-assets",
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -142,3 +151,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "EXCEPTION_HANDLER": (
+        "catalog.exceptions.mobile_theme_exception_handler"
+    ),
+}
+
+
+SILKY_AUTHENTICATION = True
+SILKY_AUTHORISATION = True
+
+
