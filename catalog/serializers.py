@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, CoolFont, SubCategory, Keyboard, DiyImage, DiyFont, DiyEffect, DiyKey, DiySound
+from .models import Category, CoolFont, SubCategory, Keyboard, Wallpaper, Theme, ThemeIcon, DiyImage, DiyFont, DiyEffect, DiyKey, DiySound
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -102,6 +102,112 @@ class KeyboardSerializer(serializers.ModelSerializer):
             "enter_button_bg",
             "priority",
             "created_at"
+        )
+
+
+class WallpaperSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True,
+    )
+
+    subcategory_name = serializers.CharField(
+        source="subcategory.name",
+        read_only=True,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Wallpaper
+        fields = (
+            "id",
+            "name",
+            "category_id",
+            "category_name",
+            "subcategory_id",
+            "subcategory_name",
+            "premium",
+            "preview_url",
+            "image_url",
+            "priority",
+            "created_at",
+        )
+
+
+class ThemeKeyboardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Keyboard
+        fields = (
+            "id",
+            "name",
+            "preview_url",
+            "text_color",
+            "key_alpha",
+            "keyboard_bg",
+            "normal_key_bg",
+            "specialty_keys_bg",
+        )
+
+
+class ThemeWallpaperSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wallpaper
+        fields = (
+            "id",
+            "name",
+            "preview_url",
+            "image_url",
+        )
+
+
+class ThemeIconSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ThemeIcon
+        fields = (
+            "id",
+            "name",
+            "preview_url",
+            "icon_image",
+            "alias_id",
+            "priority",
+            "created_at",
+        )
+
+
+class ThemeSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(
+        source="category.name",
+        read_only=True,
+    )
+
+    subcategory_name = serializers.CharField(
+        source="subcategory.name",
+        read_only=True,
+        allow_null=True,
+    )
+
+    keyboard = ThemeKeyboardSerializer(read_only=True)
+    wallpaper = ThemeWallpaperSerializer(read_only=True)
+    icons = ThemeIconSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Theme
+        fields = (
+            "id",
+            "name",
+            "category_id",
+            "category_name",
+            "subcategory_id",
+            "subcategory_name",
+            "premium",
+            "preview_url",
+            "keyboard_id",
+            "wallpaper_id",
+            "keyboard",
+            "wallpaper",
+            "icons",
+            "priority",
+            "created_at",
         )
 
 
