@@ -6,35 +6,38 @@ from .views import (ArtworkCategoryListView, ArtworkSubCategoryListView, Artwork
                     ThemeCategoryListView, ThemeSubcategoryListView, ThemeListView, ThemeDetailView,
                     DiyImageListView, DiyImageDetailView, DiyFontListView, DiyFontDetailView, DiyEffectListView, DiyEffectDetailView, DiyKeyListView, DiyKeyDetailView, DiySoundListView, DiySoundDetailView)
 
+from .views_v2 import (
+    ArtWorkCategoryListViewV2, ArtWorkSubCategoryListViewV2, ArtWorkListViewV2, ArtWorkDetailViewV2,
+    KeyboardCategoryListViewV2, KeyboardSubcategoryListViewV2, KeyboardListViewV2, KeyboardDetailViewV2
+)
+
 
 app_name = "catalog"
 
 urlpatterns = [
-    path(
-        "artwork/categories",
-        ArtworkCategoryListView.as_view(),
-        name="artwork-category-list",
-    ),
-    path(
-         "artwork/categories/<uuid:category_id>/subcategories",
-         ArtworkSubCategoryListView.as_view()
-    ),
-    path(
-    "artwork",
-    ArtworkListView.as_view(),
-    ),
-    path(
-        "artwork/<uuid:artwork_id>",
-        ArtworkDetailView.as_view(),
-        name="artwork-detail"
-    ),
+    # ArtWork APIs V1
+    path("artwork/categories", ArtworkCategoryListView.as_view(), name="artwork-category-list"),
+    path("artwork/categories/<uuid:category_id>/subcategories", ArtworkSubCategoryListView.as_view()),
+    path("artwork", ArtworkListView.as_view()),
+    path("artwork/<uuid:artwork_id>", ArtworkDetailView.as_view(), name="artwork-detail"),
+
+    #ArtWork APIs V2
+    path("v2/artwork/categories", ArtWorkCategoryListViewV2.as_view(), name="v2-artwork-category-list"),
+    path("v2/artwork/categories/<uuid:category_id>/subcategories", ArtWorkSubCategoryListViewV2.as_view()),
+    path("v2/artwork", ArtWorkListViewV2.as_view()),
+    path("v2/artwork/<uuid:artwork_id>", ArtWorkDetailViewV2.as_view(), name="v2-artwork-detal"),
+
+    # Keyboard APIs V1
     path("keyboard/categories", KeyboardCategoryListView.as_view(), name="keyboard-category-list"),
-
     path("keyboard/categories/<uuid:category_id>/subcategories", KeyboardSubCategoryListView.as_view()),
-
     path("keyboard", KeyboardListView.as_view()),
-
     path("keyboard/<uuid:keyboard_id>", KeyboardDetailView.as_view()),
+
+    # Keyborad APIs V2
+    path("v2/keyboard/categories", KeyboardCategoryListViewV2.as_view(), name="v2-keyboard-category-list"),
+    path("v2/keyboard/categories/<uuid:category_id>/subcategories", KeyboardSubcategoryListViewV2.as_view()),
+    path("v2/keyboard", KeyboardListViewV2.as_view()),
+    path("v2/keyboard/<uuid:keyboard_id>", KeyboardDetailViewV2.as_view()),
 
     path("wallpaper/categories", WallpaperCategoryListView.as_view(), name="wallpaper-category-list"),
 

@@ -184,7 +184,7 @@ class ArtworkDetailView(APIView):
 
 
 class KeyboardCategoryListView(APIView):
-    permission_classes = [HasMobileThemeAPIKey]
+    permission_classes = (HasMobileThemeAPIKey,)
 
     def get(self, request):
         categories = Category.objects.filter(type=Category.Type.KEYBOARD)
@@ -229,7 +229,7 @@ class KeyboardSubCategoryListView(APIView):
                 {
                     "status": 404,
                     "data": None,
-                    "message": "Keyboard category no found",
+                    "message": "Keyboard category not found",
                 },
                 status=404
             )

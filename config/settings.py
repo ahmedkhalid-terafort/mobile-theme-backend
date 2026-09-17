@@ -164,3 +164,14 @@ SILKY_AUTHENTICATION = True
 SILKY_AUTHORISATION = True
 
 
+REDIS_URL = env(
+    "REDIS_URL",
+    default="redis://127.0.0.1:6379/0",
+)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+    }
+}
