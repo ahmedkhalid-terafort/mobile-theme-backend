@@ -14,5 +14,9 @@ def set_cached_items(cache_key, items):
     )
 
 
-def invalidate_cache(*cache_keys):
-    cache.delete_many(cache_keys)
+# def invalidate_cache(*cache_keys):
+#     cache.delete_many(cache_keys)
+
+def invalidate_catalog_cache():
+    cache.clear()
+

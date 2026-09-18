@@ -31,6 +31,8 @@ from .forms import (
     WallpaperAdminForm,
 )
 from .services.storage import upload_public_file
+from .services.cache import invalidate_catalog_cache
+
 
 # Register your models here.
 
@@ -60,8 +62,20 @@ class ImagePreviewMixin:
             
         return "-"
 
+class CacheInvalidationAdminMixin:
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        invalidate_catalog_cache()
 
-class StorageUploadAdminMixin:
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        super().delete_queryset(request, queryset)
+
+        invalidate_catalog_cache()
+
+class StorageUploadAdminMixin(CacheInvalidationAdminMixin):
     upload_fields = {}
 
     def save_model(self, request, obj, form, change):
